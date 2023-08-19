@@ -18,11 +18,12 @@ export default function App() {
           tabBarActiveTintColor: "#e91e63",
           tabBarStyle: {
             position: "absolute",
+            height: 60,
             bottom: 10,
             left: 20,
             right: 20,
-            paddingBottom: 10,
-            paddingTop: 0,
+            paddingBottom: 6,
+            paddingTop: 5,
             borderRadius: 40,
           },
           tabBarItemStyle: {

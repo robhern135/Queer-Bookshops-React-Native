@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from "react-native"
+import { Image, StyleSheet, Text, View } from "react-native"
 import React, { useEffect, useState } from "react"
 
-import MapView, { Marker } from "react-native-maps"
+import { Callout, Marker } from "react-native-maps"
+import MapView from "react-native-map-clustering"
+
 import axios from "axios"
 
 import { ENV_GOOGLE_MAPS_API } from "@env"
@@ -19,14 +21,11 @@ const HomeMap = () => {
 
   //** VARS */
   const API_URL =
-    "https://findrob.co.uk/queer-bookshops/wp/wp-json/wp/v2/bookshops??per_page=100&_embed&order=asc"
+    "https://findrob.co.uk/queer-bookshops/wp/wp-json/wp/v2/bookshops?per_page=100&_embed"
 
   const getBookshops = () => {
     try {
-      axios
-        .get(API_URL)
-        .then((res) => setBookshops(res.data))
-        .then(console.log(bookshops))
+      axios.get(API_URL).then((res) => setBookshops(res.data))
     } catch (err) {
       console.log(`error fetching books: ${err.message}`)
     }
@@ -36,7 +35,9 @@ const HomeMap = () => {
     if (bookshops == undefined) {
       getBookshops()
     }
-    console.log(bookshops)
+    setTimeout(() => {
+      console.log(bookshops)
+    }, 500)
   }, [])
 
   return (
@@ -44,8 +45,7 @@ const HomeMap = () => {
       <MapView
         style={styles.map}
         initialRegion={region}
-        region={region}
-        onRegionChange={(newRegion) => setRegion(newRegion)}
+        onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
       >
         {bookshops?.map((shop, idx) => {
           const {
@@ -62,7 +62,8 @@ const HomeMap = () => {
               key={idx}
               coordinate={{ latitude: latitude, longitude: longitude }}
               title={title}
-              description={website}
+              description={address}
+              image={require("../assets/marker.png")}
             />
           )
         })}
