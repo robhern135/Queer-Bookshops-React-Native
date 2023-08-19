@@ -1,1 +1,0 @@
-# Queer-Bookshops-React-Native
