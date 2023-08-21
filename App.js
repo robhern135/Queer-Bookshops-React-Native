@@ -19,7 +19,7 @@ export default function App() {
           tabBarStyle: {
             position: "absolute",
             height: 60,
-            bottom: 10,
+            bottom: Platform.OS === "ios" ? 20 : 10,
             left: 20,
             right: 20,
             paddingBottom: 6,

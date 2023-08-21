@@ -13,6 +13,35 @@ const CARD_HEIGHT = 190
 const CARD_WIDTH = width * 0.6
 
 const Card = ({ shop, idx }) => {
+  const handleBG = () => {
+    let color = "#efafa2"
+    if (idx == 0 || idx == 12) {
+      color = "#efafa2"
+    } else if (idx == 1 || idx == 13) {
+      color = "#f7cfa6"
+    } else if (idx == 2 || idx == 14) {
+      color = "#f8ecaa"
+    } else if (idx == 4 || idx == 15) {
+      color = "#b4cdaa"
+    } else if (idx == 5 || idx == 16) {
+      color = "#b4bee6"
+    } else if (idx == 6 || idx == 17) {
+      color = "##d0aec4"
+    } else if (idx == 7 || idx == 18) {
+      color = "#b4ada0"
+    } else if (idx == 8 || idx == 19) {
+      color = "#cbb9a5"
+    } else if (idx == 9 || idx == 20) {
+      color = "#cfe5e0"
+    } else if (idx == 10 || idx == 21) {
+      color = "##f7d9d5"
+    } else if (idx == 11 || idx == 22) {
+      color = "##f8f0e5"
+    }
+
+    return color
+  }
+
   const {
     acf: {
       country,
@@ -24,7 +53,7 @@ const Card = ({ shop, idx }) => {
   const title = shop.title.rendered
   const image = shop._embedded["wp:featuredmedia"]["0"].source_url
   return (
-    <View style={styles.card} key={idx}>
+    <View style={[styles.card, { backgroundColor: handleBG() }]} key={idx}>
       <Image
         source={{ uri: image }}
         style={styles.cardImage}

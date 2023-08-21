@@ -17,6 +17,8 @@ import { ENV_GOOGLE_MAPS_API } from "@env"
 import { categories } from "../Data/Categories"
 import Card from "./Card"
 
+import mapStyles from "../Data/mapStyles"
+
 const { width, height } = Dimensions.get("window")
 const CARD_WIDTH = width * 0.6
 const SPACING_FOR_CARD_INSET = width * 0.1 - 10
@@ -25,12 +27,14 @@ const HomeMap = () => {
   //** STATE */
   const [API_KEY, setAPI_KEY] = useState(ENV_GOOGLE_MAPS_API)
   const [bookshops, setBookshops] = useState()
+  const [filteredBookshops, setFilteredBookshops] = useState()
   const [region, setRegion] = useState({
     latitude: 53.94519,
     longitude: -2.52069,
     latitudeDelta: 7.5,
     longitudeDelta: 7.5,
   })
+  const [filters, setFilters] = useState()
 
   //** VARS */
   const API_URL =
@@ -44,14 +48,17 @@ const HomeMap = () => {
           a.title.rendered.localeCompare(b.title.rendered)
         )
         setBookshops(sortedList)
+        setFilteredBookshops(sortedList)
       })
     } catch (err) {
       console.log(`error fetching books: ${err.message}`)
     }
   }
 
+  const handleFilter = () => {}
+
   useEffect(() => {
-    if (bookshops == undefined) {
+    if (bookshops == undefined || filteredBookshops) {
       getBookshops()
     }
     setTimeout(() => {
@@ -64,10 +71,10 @@ const HomeMap = () => {
 
   useEffect(() => {
     mapAnimation.addListener(({ value }) => {
-      if (bookshops) {
+      if (filteredBookshops) {
         let index = Math.floor(value / CARD_WIDTH + 0.3) // animate 30% away from landing on the next item
-        if (index >= bookshops.length) {
-          index = bookshops.length - 1
+        if (index >= filteredBookshops.length) {
+          index = filteredBookshops.length - 1
         }
         if (index <= 0) {
           index = 0
@@ -78,15 +85,17 @@ const HomeMap = () => {
         const regionTimeout = setTimeout(() => {
           if (mapIndex !== index) {
             mapIndex = index
-            let current_latitude = bookshops[index].acf.position.latitude
-            let current_longitude = bookshops[index].acf.position.longitude
+            let current_latitude =
+              filteredBookshops[index].acf.position.latitude
+            let current_longitude =
+              filteredBookshops[index].acf.position.longitude
 
             mapRef.current.animateToRegion(
               {
                 latitude: current_latitude,
                 longitude: current_longitude,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
+                latitudeDelta: 0.5,
+                longitudeDelta: 0.5,
               },
               350
             )
@@ -99,11 +108,11 @@ const HomeMap = () => {
   const onMarkerPress = (mapEventData) => {
     const markerID = mapEventData._targetInst.return.key
 
-    let x = markerID * CARD_WIDTH + markerID * 20
+    let scrollX = markerID * CARD_WIDTH + markerID * 20
     if (Platform.OS === "ios") {
-      x = x - SPACING_FOR_CARD_INSET
+      scrollX = scrollX - SPACING_FOR_CARD_INSET
     }
-    scrollViewRef.current.scrollTo({ x: x, y: 0, animated: true })
+    scrollViewRef.current.scrollTo({ x: scrollX, y: 0, animated: true })
   }
 
   const mapRef = useRef()
@@ -112,13 +121,17 @@ const HomeMap = () => {
   return (
     <View style={styles.container}>
       <MapView
+        clusteringEnabled={false}
+        clusterColor={"#1d1d1d"}
+        clusterTextColor="white"
+        customMapStyle={mapStyles}
         provider={PROVIDER_GOOGLE}
         ref={mapRef}
         style={styles.map}
         initialRegion={region}
         onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
       >
-        {bookshops?.map((shop, idx) => {
+        {filteredBookshops?.map((shop, idx) => {
           const {
             acf: {
               country,
@@ -132,7 +145,7 @@ const HomeMap = () => {
 
           return (
             <Marker
-              onPress={(e) => onMarkerPress(e)}
+              // onPress={(e) => onMarkerPress(e)}
               key={idx}
               coordinate={{ latitude: latitude, longitude: longitude }}
               title={title}
@@ -171,7 +184,7 @@ const HomeMap = () => {
       </ScrollView>
       {/* cards */}
       <Animated.ScrollView
-        ref={this.scrollViewRef}
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         scrollEventThrottle={1}
@@ -223,7 +236,7 @@ const styles = StyleSheet.create({
   },
   chipsScrollView: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 30 : 40,
+    top: Platform.OS === "ios" ? 50 : 40,
     paddingHorizontal: 10,
   },
   chipsItem: {
@@ -241,7 +254,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     position: "absolute",
-    bottom: Platform.OS === "ios" ? 70 : 70,
+    bottom: Platform.OS === "ios" ? 80 : 70,
     left: 0,
     right: 0,
     paddingVertical: 10,
