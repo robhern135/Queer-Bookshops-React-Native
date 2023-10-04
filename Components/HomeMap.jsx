@@ -1,6 +1,7 @@
 import {
   Animated,
   Dimensions,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,8 @@ import axios from "axios"
 import { ENV_GOOGLE_MAPS_API } from "@env"
 import { categories } from "../Data/Categories"
 import Card from "./Card"
+
+import { windowWidth, windowHeight } from "../Functions/layoutFunctions"
 
 import mapStyles from "../Data/mapStyles"
 
@@ -35,6 +38,7 @@ const HomeMap = () => {
     longitudeDelta: 7.5,
   })
   const [filters, setFilters] = useState()
+  const [activeLocation, setActiveLocation] = useState()
 
   //** VARS */
   const API_URL =
@@ -55,7 +59,20 @@ const HomeMap = () => {
     }
   }
 
-  const handleFilter = () => {}
+  const filterShops = (key) => {
+    console.log(bookshops)
+    let theFiltered = bookshops.filter(function (shop) {
+      return shop.acf.country.toLowerCase == key
+    })
+    console.log(theFiltered)
+    // setFilteredBookshops(theFiltered)
+  }
+
+  const handleFilter = (name) => {
+    console.log(name)
+    let key = name.toLowerCase()
+    filterShops(key)
+  }
 
   useEffect(() => {
     if (bookshops == undefined || filteredBookshops) {
@@ -105,14 +122,16 @@ const HomeMap = () => {
     })
   })
 
-  const onMarkerPress = (mapEventData) => {
+  const onMarkerPress = (mapEventData, idx) => {
     const markerID = mapEventData._targetInst.return.key
 
-    let scrollX = markerID * CARD_WIDTH + markerID * 20
-    if (Platform.OS === "ios") {
-      scrollX = scrollX - SPACING_FOR_CARD_INSET
-    }
-    scrollViewRef.current.scrollTo({ x: scrollX, y: 0, animated: true })
+    console.log(`marker ID: ${markerID}`)
+    setActiveLocation(filteredBookshops[idx])
+    // let scrollX = markerID * CARD_WIDTH + markerID * 20
+    // if (Platform.OS === "ios") {
+    //   scrollX = scrollX - SPACING_FOR_CARD_INSET
+    // }
+    // scrollViewRef.current.scrollTo({ x: scrollX, y: 0, animated: true })
   }
 
   const mapRef = useRef()
@@ -145,7 +164,7 @@ const HomeMap = () => {
 
           return (
             <Marker
-              // onPress={(e) => onMarkerPress(e)}
+              onPress={(e) => onMarkerPress(e, idx)}
               key={idx}
               coordinate={{ latitude: latitude, longitude: longitude }}
               title={title}
@@ -171,6 +190,7 @@ const HomeMap = () => {
           const { name } = cat
           return (
             <TouchableOpacity
+              onPress={() => handleFilter(name)}
               key={name}
               style={[
                 styles.chipsItem,
@@ -183,7 +203,7 @@ const HomeMap = () => {
         })}
       </ScrollView>
       {/* cards */}
-      <Animated.ScrollView
+      {/* <Animated.ScrollView
         ref={scrollViewRef}
         horizontal
         pagingEnabled
@@ -217,7 +237,20 @@ const HomeMap = () => {
         {bookshops?.map((shop, idx) => {
           return <Card shop={shop} key={idx} idx={idx} />
         })}
-      </Animated.ScrollView>
+      </Animated.ScrollView> */}
+      {activeLocation ? (
+        <View style={styles.locationContainer}>
+          <View style={styles.location}>
+            <View style={styles.imageContainer}>
+              <Card shop={activeLocation} />
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.placeholderLocation}>
+          <Text>Select a location to begin</Text>
+        </View>
+      )}
     </View>
   )
 }
@@ -231,8 +264,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   map: {
-    width: "100%",
-    height: "100%",
+    width: windowWidth,
+    height: windowHeight - 300,
+  },
+  locationContainer: {
+    height: 300,
+    backgroundColor: "white",
+    width: windowWidth,
+  },
+  placeholderLocation: {
+    padding: 20,
   },
   chipsScrollView: {
     position: "absolute",

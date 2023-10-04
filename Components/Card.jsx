@@ -9,8 +9,10 @@ import {
 import React from "react"
 
 const { width, height } = Dimensions.get("window")
-const CARD_HEIGHT = 190
-const CARD_WIDTH = width * 0.6
+// const CARD_HEIGHT = 190
+const CARD_HEIGHT = "100%"
+// const CARD_WIDTH = width * 0.6
+const CARD_WIDTH = "100%"
 
 const Card = ({ shop, idx }) => {
   const handleBG = () => {
