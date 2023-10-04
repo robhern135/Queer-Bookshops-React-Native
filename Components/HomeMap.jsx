@@ -18,6 +18,8 @@ import { ENV_GOOGLE_MAPS_API } from "@env"
 import { categories } from "../Data/Categories"
 import Card from "./Card"
 
+import { Colors } from "../Constants/Colors"
+
 import { windowWidth, windowHeight } from "../Functions/layoutFunctions"
 
 import mapStyles from "../Data/mapStyles"
@@ -28,14 +30,21 @@ const SPACING_FOR_CARD_INSET = width * 0.1 - 10
 
 const HomeMap = () => {
   //** STATE */
+  let initialRegion = {
+    latitude: 53.94519,
+    longitude: -2.52069,
+    latitudeDelta: 8.5,
+    longitudeDelta: 8.5,
+  }
+
   const [API_KEY, setAPI_KEY] = useState(ENV_GOOGLE_MAPS_API)
   const [bookshops, setBookshops] = useState()
   const [filteredBookshops, setFilteredBookshops] = useState()
   const [region, setRegion] = useState({
     latitude: 53.94519,
     longitude: -2.52069,
-    latitudeDelta: 7.5,
-    longitudeDelta: 7.5,
+    latitudeDelta: 8.5,
+    longitudeDelta: 8.5,
   })
   const [filters, setFilters] = useState()
   const [activeLocation, setActiveLocation] = useState()
@@ -43,6 +52,10 @@ const HomeMap = () => {
   //** VARS */
   const API_URL =
     "https://findrob.co.uk/queer-bookshops/wp/wp-json/wp/v2/bookshops?per_page=100&_embed"
+
+  useEffect(() => {
+    console.log("changed region")
+  }, [region])
 
   const getBookshops = () => {
     try {
@@ -60,16 +73,16 @@ const HomeMap = () => {
   }
 
   const filterShops = (key) => {
-    console.log(bookshops)
+    // console.log(bookshops)
     let theFiltered = bookshops.filter(function (shop) {
       return shop.acf.country.toLowerCase == key
     })
-    console.log(theFiltered)
+    // console.log(theFiltered)
     // setFilteredBookshops(theFiltered)
   }
 
   const handleFilter = (name) => {
-    console.log(name)
+    // console.log(name)
     let key = name.toLowerCase()
     filterShops(key)
   }
@@ -78,9 +91,9 @@ const HomeMap = () => {
     if (bookshops == undefined || filteredBookshops) {
       getBookshops()
     }
-    setTimeout(() => {
-      console.log(bookshops)
-    }, 500)
+    // setTimeout(() => {
+    //   console.log(bookshops)
+    // }, 500)
   }, [])
 
   let mapAnimation = new Animated.Value(0)
@@ -89,16 +102,14 @@ const HomeMap = () => {
   useEffect(() => {
     mapAnimation.addListener(({ value }) => {
       if (filteredBookshops) {
-        let index = Math.floor(value / CARD_WIDTH + 0.3) // animate 30% away from landing on the next item
-        if (index >= filteredBookshops.length) {
-          index = filteredBookshops.length - 1
-        }
-        if (index <= 0) {
-          index = 0
-        }
-
+        // let index = Math.floor(value / CARD_WIDTH + 0.3) // animate 30% away from landing on the next item
+        // if (index >= filteredBookshops.length) {
+        //   index = filteredBookshops.length - 1
+        // }
+        // if (index <= 0) {
+        //   index = 0
+        // }
         clearTimeout(regionTimeout)
-
         const regionTimeout = setTimeout(() => {
           if (mapIndex !== index) {
             mapIndex = index
@@ -106,7 +117,6 @@ const HomeMap = () => {
               filteredBookshops[index].acf.position.latitude
             let current_longitude =
               filteredBookshops[index].acf.position.longitude
-
             mapRef.current.animateToRegion(
               {
                 latitude: current_latitude,
@@ -122,16 +132,34 @@ const HomeMap = () => {
     })
   })
 
-  const onMarkerPress = (mapEventData, idx) => {
+  const onMarkerPress = (mapEventData, index) => {
     const markerID = mapEventData._targetInst.return.key
-
-    console.log(`marker ID: ${markerID}`)
-    setActiveLocation(filteredBookshops[idx])
+    // console.log(`marker ID: ${markerID}`)
+    setActiveLocation(filteredBookshops[index])
     // let scrollX = markerID * CARD_WIDTH + markerID * 20
     // if (Platform.OS === "ios") {
     //   scrollX = scrollX - SPACING_FOR_CARD_INSET
     // }
     // scrollViewRef.current.scrollTo({ x: scrollX, y: 0, animated: true })
+
+    if (mapIndex !== index) {
+      mapIndex = index
+      let current_latitude = filteredBookshops[index].acf.position.latitude
+      let current_longitude = filteredBookshops[index].acf.position.longitude
+      mapRef.current.animateToRegion(
+        {
+          latitude: current_latitude,
+          longitude: current_longitude,
+          latitudeDelta: 0.5,
+          longitudeDelta: 0.5,
+        },
+        350
+      )
+    }
+  }
+
+  const resetMap = () => {
+    mapRef.current.animateToRegion(initialRegion, 350)
   }
 
   const mapRef = useRef()
@@ -148,7 +176,10 @@ const HomeMap = () => {
         ref={mapRef}
         style={styles.map}
         initialRegion={region}
-        onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+        onRegionChangeComplete={(newRegion) => {
+          // console.log(newRegion)
+          setRegion(newRegion)
+        }}
       >
         {filteredBookshops?.map((shop, idx) => {
           const {
@@ -177,7 +208,7 @@ const HomeMap = () => {
       <ScrollView
         contentContainerStyle={{
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-start",
           gap: 5,
         }}
         horizontal
@@ -186,7 +217,7 @@ const HomeMap = () => {
         height={50}
         style={styles.chipsScrollView}
       >
-        {categories?.map((cat, idx) => {
+        {/* {categories?.map((cat, idx) => {
           const { name } = cat
           return (
             <TouchableOpacity
@@ -200,7 +231,13 @@ const HomeMap = () => {
               <Text>{name}</Text>
             </TouchableOpacity>
           )
-        })}
+        })} */}
+        <TouchableOpacity
+          onPress={() => resetMap()}
+          style={[styles.chipsItem, { backgroundColor: "black" }]}
+        >
+          <Text style={{ color: "white" }}>Reset Map</Text>
+        </TouchableOpacity>
       </ScrollView>
       {/* cards */}
       {/* <Animated.ScrollView
@@ -262,6 +299,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: Colors.creme,
   },
   map: {
     width: windowWidth,
@@ -271,14 +309,21 @@ const styles = StyleSheet.create({
     height: 300,
     backgroundColor: "white",
     width: windowWidth,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   placeholderLocation: {
     padding: 20,
+    height: 300,
+    borderTopLeftRadius: 20,
+    overflow: "hidden",
+    borderTopRightRadius: 20,
   },
   chipsScrollView: {
     position: "absolute",
     top: Platform.OS === "ios" ? 50 : 40,
     paddingHorizontal: 10,
+    minWidth: windowWidth,
   },
   chipsItem: {
     flexDirection: "row",
